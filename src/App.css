@@ -362,9 +362,26 @@ h1 {
 .blog_form_header_transactions {
   display: grid;
   grid-template-columns: 2fr 0.5fr;
+  /* grid-template-columns: 1.5fr auto 0.5fr; */
   grid-gap: 10px;
  font-family: PoppinsBol;
 }
+.clear-transaction-title {
+  width: 40px;
+  background: #e8e8ea;
+  display: grid;
+  place-content: center;
+  margin-left: -10px;
+  border-radius: 0 4px 4px 0;
+  cursor: pointer;
+  transition: 0.4s;
+  height: 100%;
+  border: none;
+}
+.clear-transaction-title:hover {
+  background: #dbdbdb !important;
+}
+
 .blog_form_header_transactions input::placeholder {
  font-family: PoppinsReg;
 }
@@ -538,9 +555,9 @@ width: auto;
 .blog_form_details .ant-select-selection-item, .blog_form_details .ant-input  {
   font-family: PoppinsReg;
 }
-.ant-select-selection-search, .ant-select-selection-item {
+/* .ant-select-selection-search, .ant-select-selection-item {
   padding-left: 22px !important;
-}
+} */
 .date_input {
   width: 120px;
 }
@@ -636,9 +653,7 @@ button[role="switch"] {
   background-color: var(--accent-1) !important;
 }
 
-tbody tr td:nth-child(1):before {
-  content: "#"
-}
+
 
 
 .link-active {
@@ -657,6 +672,12 @@ tbody tr td:nth-child(1):before {
 }
 
 /* table */
+.blog_type_multiwords div {
+  font-family: 'PoppinsBol';
+}
+.blog_type_multiwords div::first-letter {
+  text-transform: uppercase;
+}
 .ant-table-tbody {
   margin: 20px;
   box-shadow: inset 0 20px whitesmoke;
@@ -733,6 +754,10 @@ th::before {
 .ant-select-selection-placeholder, .ant-select-selection-item {
   color: var(--dark) !important;
   font-family: PoppinsBol !important;
+} 
+.uploadfromgallery .ant-select-selection-placeholder{
+  color: var(--dark) !important;
+  font-family: PoppinsReg !important;
 } 
 
 
@@ -854,8 +879,11 @@ th::before {
 .modal_upload_from_gallery .ant-modal-body {
   display: flex;
   gap:10px;
-  flex-wrap: wrap;
+  flex-direction: column;
   padding: 30px;
+  background-color: #1a26570f;
+  margin-top: 20px;
+  height: 100vh;
 }
 .upload_from_gallery_wrapper {
   position: relative;
@@ -967,7 +995,7 @@ flex:1 !important
   max-width: 60vw;
   object-fit: cover;
   object-position: top center;
-  aspect-ratio: 2/1;
+  /* aspect-ratio: 2/1; */
   margin-bottom: 50px;
 }
 

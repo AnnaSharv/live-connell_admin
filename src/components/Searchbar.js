@@ -49,11 +49,9 @@ const url = adminDomain
     
     });
    
-    if (searchTerm.length === 0) {
-      return 
-    } else {
-       const result = idx.search(searchTerm)
-    setSearchResults(result);
+    if (searchTerm.length > 0) {
+      const result = idx.search(searchTerm)
+      setSearchResults(result); 
     }
    
   }, [searchTerm]);

@@ -5,7 +5,7 @@ import GridLoader from "react-spinners/GridLoader";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth} from "./pages/firebase";
 
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, orderBy } from "firebase/firestore";
 import { db } from "./pages/firebase";
 import {useDispatch} from 'react-redux'
 import {getBlogData} from '../src/redux/reducers/blogs/blogs.actions'
@@ -30,10 +30,17 @@ import Gallery from '../src/pages/gallery.js'
 //import Sliders from './pages/sliders';
 
 
+//Netlify
+// export const adminDomain = 'admin-connell-consulting.netlify.app'
+// export const websiteDomain = 'connell-consulting.netlify.app'
 
+
+//AWS
 export const adminDomain = 'admin.connell-consulting.com'
-export const websiteDomain = 'test.connell-consulting.com'
+export const websiteDomain = 'connell-consulting.com'
 
+
+//localhost
 // export const adminDomain = 'http://localhost:3001'
 // export const websiteDomain = 'http://localhost:3000'
 
@@ -74,14 +81,14 @@ useEffect(() => {
 
 useEffect(() => {
   async function getData() {
-    const querySnapshot = await getDocs(collection(db, "blogs"));
+    const querySnapshot = await getDocs(collection(db, "blogs"), [orderBy("timeStamp", "desc"), orderBy("blog_date", "desc")]);
     const list = [];
     querySnapshot.forEach((doc) => {
       list.push({ id: doc.id, data: doc.data() });
     });
     dispatch(getBlogData(list));
   }
-  getData();
+  getData(); 
 }, [dispatch]);
 
   return (

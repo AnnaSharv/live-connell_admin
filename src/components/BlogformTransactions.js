@@ -1,4 +1,5 @@
 import React, {useRef, useState, useEffect} from 'react'
+import { DeleteFilled } from "@ant-design/icons";
 
 import { Formik, Field, Form} from 'formik';
 import { v4 as uuid } from 'uuid';
@@ -10,19 +11,26 @@ import { storage } from "../pages/firebase";
 import { Button, Divider } from 'antd';
 
 import Photo from '../assets/icons/upload.svg'
-import Edit from '../assets/icons/edit.svg'
+//import Edit from '../assets/icons/edit.svg'
 import ModalDelete from './modalDelete';
 import ModalDuplicate from './modalDuplicate';
-import ModalPreview from './modalPreview';
+//import ModalPreview from './modalPreview';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import SelectwithSearch from './SelectwithSearch';
 import UploadfromGallery from './UploadfromGallery';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
 
 
 
 
 function BlogformTransactions() {
  const {pathname} = useLocation()
+ const location = useLocation();
+ const orderId = location.state?.blogLength * (-1)
+
+
+
+
 
     let navigate = useNavigate();
     const [myid, setmyid] = useState(uuid())
@@ -76,7 +84,6 @@ function BlogformTransactions() {
             break;
         case "03" || "3":
             monthName = "Mar"
-            console.log("firsxt")
             break;
         case "04" || "4":
             monthName = "Apr"
@@ -113,6 +120,7 @@ function BlogformTransactions() {
     const mydate = `${monthName} ${day}, ${year}`
  
 
+    
   
 
 
@@ -197,15 +205,20 @@ function BlogformTransactions() {
 
     const addTransaction = async (vals) => {
       let docId = pathname.split("=") 
-       
       let data, merge;
       if(pathname.includes("addTransaction/edit")) {
         console.log("edit")
         docId = docId[docId.length-1]
         data = {
             timeStamp: Date.now(),
+            orderId: vals.orderId,
+            draft_id: blogActive[0]?.data?.id || vals.draft_id,
+            blog_title: blogActive[0]?.data?.blog_title || "",
+            blog_body: blogActive[0]?.data?.blog_body   || "",
+            blog_date: blogActive[0]?.data?.blog_date   || "",
+            blog_type: blogActive[0]?.data?.blog_type   || "",
             transactions_status: vals.transactions_status ,
-            transactions_title: vals.transactions_title ,
+            transactions_title: vals.transactions_title || "" ,
             transactions_year: vals.transactions_year ,
             transactions_image: transactionsImg.firebaseLink ,
             transactions_image_name: transactionsImg.name ,
@@ -218,14 +231,15 @@ function BlogformTransactions() {
         docId = myid
         data = {
             timeStamp: Date.now(),
-            id: docId ,
-            draft_id: blogActive[0]?.data.draft_id ,
-            blog_title: blogActive[0]?.data.blog_title ,
-            blog_body: blogActive[0]?.data.blog_body ,
-            blog_date: blogActive[0]?.data.blog_date ,
-            blog_type: blogActive[0]?.data.blog_type ,
+            id: docId,
+            orderId: orderId,
+            draft_id: blogActive[0]?.data.draft_id || vals.draft_id,
+            blog_title: blogActive[0]?.data.blog_title || "",
+            blog_body: blogActive[0]?.data.blog_body  || "",
+            blog_date: blogActive[0]?.data.blog_date || "",
+            blog_type: blogActive[0]?.data.blog_type || "",
             transactions_status: vals.transactions_status ,
-            transactions_title: vals.transactions_title ,
+            transactions_title: vals.transactions_title || "" ,
             transactions_year: vals.transactions_year ,
             transactions_image: transactionsImg.firebaseLink ,
             transactions_image_name: transactionsImg.name ,
@@ -252,11 +266,10 @@ function BlogformTransactions() {
             //draftidan amoshla
             const del = async () => {await deleteDoc(doc(db, "drafts", docId))}
             del()
-            console.log("del", myid)
-            } catch (e) {
-                console.error("Error adding document: ", e);
-            }
-       
+          //  console.log("del", myid)
+        } catch (e) {
+            console.error("Error adding document: ", e);
+        }
     };
 
   
@@ -309,7 +322,6 @@ function BlogformTransactions() {
 
 
     useEffect(() => {
-
        
         let arr_temp = []
         let docId = pathname.split("=") 
@@ -328,6 +340,7 @@ function BlogformTransactions() {
               if (formRef.current) {
                 formRef.current.setFieldValue("id", docId);
                 formRef.current.setFieldValue("draft_id", arr_temp[0].data?.draft_id);
+                formRef.current.setFieldValue("orderId", arr_temp[0].data?.orderId);
                 formRef.current.setFieldValue("transactions_status", arr_temp[0].data?.transactions_status);
                 formRef.current.setFieldValue("transactions_title", arr_temp[0].data?.transactions_title);
                 formRef.current.setFieldValue("transactions_date", arr_temp[0].data?.transactions_date);
@@ -336,7 +349,7 @@ function BlogformTransactions() {
                 formRef.current.setFieldValue("transactions_image_name", arr_temp[0].data?.transactions_image_name);
                 formRef.current.setFieldValue("transactions_image_size", arr_temp[0].data?.transactions_image_size);
                 settransactionsImg({...transactionsImg, firebaseLink: arr_temp[0].data?.transactions_image, name:arr_temp[0].data?.transactions_image_name, size:arr_temp[0].data?.transactions_image_size })
-              
+                setBlogActiveTitle(arr_temp[0].data?.transactions_title)
             }
 
 
@@ -365,6 +378,7 @@ function BlogformTransactions() {
       
                setBlogsAll(list)
                setBlogsNames(postNames)
+
           }
       
           getAllBlogs()
@@ -390,6 +404,7 @@ function BlogformTransactions() {
                 transactions_date: mydate,
                 draft_id:"",
                 id: "",
+                orderId: orderId,
                 transactions_title: null,
                 transactions_status: "active",
                 transactions_year: "",
@@ -420,13 +435,14 @@ function BlogformTransactions() {
                                 blogsnames={blogsNames}
                                 setblogactivetitle={setBlogActiveTitle}
                                 blogactivetitle={blogActiveTitle}
+                                clearinfo={formRef.current?.values}
                             />
-
+                            {/* <Button className='clear-transaction-title' onClick={() => clearTransactionTitle(formRef.current?.values)}>
+                                <DeleteFilled style={{ color: '#1a2048' }}/>
+                            </Button> */}
                             <Field type="number"  name="transactions_year" placeholder="year" defaultValue={year}/>
                         </div>
-                    </fieldset>
 
-                    <fieldset>
                         <div className='blog_form_details'>
                             <div className='content_wrapper'>
                                 <span> Publish status </span>
@@ -439,6 +455,18 @@ function BlogformTransactions() {
                                 <ModalDelete docId={docId} dbName={"transactions"} redirect={true}/>
                             </div> 
                         </div>
+                    </fieldset>
+
+                    <fieldset>
+                        <div className='blog_form_details' style={{padding: 15}}>
+                            <div>
+                                <div style={{width: "100%", fontFamily:'PoppinsBol'}}> Selected image: </div>
+                                <div style={{width: "100%"}}>  {transactionsImg.name || formRef.current?.values.transactions_image_name} </div>
+                                <div style={{display:'grid', placeContent: 'center'}}> 
+                                    <LazyLoadImage effect='blur' title={transactionsImg.name || formRef.current?.values.transactions_image_name} src={transactionsImg.firebaseLink || formRef.current?.values.transactions_image} style={{height: 440, width:"100%", objectFit: "contain"}}/>
+                                </div>
+                            </div>
+                        </div> 
                     </fieldset>
 
                     <button hidden type="submit" ref={publish} className='btn btn-primary mt-2'>Submit</button>

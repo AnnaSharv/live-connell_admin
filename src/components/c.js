@@ -48,7 +48,7 @@ export const uploadImageAsPromise = function (img,  dbName, setIsUploading, isUp
                  await updateDoc(countRef, {
                     [dbName]: increment(1)
                 });
-            //   console.log("Document written with ID: ", docRef.id);
+              console.log("Document written with ID: ", docRef.id);
              setIsUploading({isUploading, status: false})
               list.push(downloadURL)
             };

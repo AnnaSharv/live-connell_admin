@@ -1,11 +1,20 @@
-import React, { useState } from 'react'
+import React, { useState,useEffect } from 'react'
 import {db} from '../pages/firebase'
 import { doc, addDoc,  collection, updateDoc, increment } from "firebase/firestore";
 import { Modal } from 'antd';
+import formatDate from '../utils/formatDate.js'
 
 function ModalDuplicate({record, dbName, permalink}) {
   const [open, setOpen] = useState(false);
   //const adminDomain = "http://localhost:3000"
+  const [formattedDate, setformattedDate] = useState(new Date())
+   // const date = new Date();
+  
+  useEffect(() => {
+    const date = formattedDate?.toISOString().slice(0, 10);
+    setformattedDate(date)
+  }, [])
+  
   return (
     <>
       <button type='button' className='button button-no_outline_primary' onClick={() => setOpen(true)}>
@@ -41,14 +50,16 @@ if (dbName === "team") {
   data = {
     timeStamp: Date.now(),
     draft_id: record.draft_id,
+    orderId: record.orderId,
     member_name: record.member_name,
     member_contact: record.member_contact,
+    member_position: record.member_position,
     member_description: record.member_description,
     blog_image: record.blog_image,
     blog_image_name: record.blog_image_name,
     blog_image_size: record.blog_image_size,
     member_status: record.member_status,
-    member_date: record.member_date,
+    member_date: formatDate(formattedDate),
   }
 }
 
@@ -61,7 +72,7 @@ if (dbName === "blogs") {
     imgArr: record.imgArr,
     blog_status: record.blog_status,
     blog_type: record.blog_type,
-    blog_date: record.blog_date,
+    blog_date: formattedDate,
     blog_permalink: record.blog_permalink
   }
 }
@@ -70,7 +81,9 @@ if (dbName === "transactions") {
     timeStamp: Date.now(),
     transactions_date:  record.transactions_date,
     draft_id: record.draft_id,
+    orderId: record.orderId,
     transactions_title:  record.transactions_title,
+    transactions_date:formattedDate,
     transactions_status:  record.transactions_status,
     transactions_year:  record.transactions_year,
     transactions_image:  record.transactions_image,

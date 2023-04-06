@@ -3,22 +3,24 @@ import Header from "../components/Blogheader.js";
 import MyTable from "../components/Table.js";
 import { useLocation } from "react-router-dom";
 import { collection,  onSnapshot, orderBy, query, where } from "firebase/firestore";
-
 import { db } from "../pages/firebase";
 //import TableDraggable from "../components/TableDraggable.js";
+import {parse, compareDesc} from 'date-fns'
+import {useSelector} from 'react-redux'
 
 
+import TableDraggable from '../components/TableDraggable'
 
 //{blogsAll, setmyQuery, myQuery}
 function BlogList(props) {
+  const blogsAllRedux = useSelector(state => state.blogList.blogsAll) || []
+
   const { pathname } = useLocation();
   const [blogsAll, setBlogsAll] = useState([]);
   const [blogsTransactions, setBlogsTransactions] = useState([]);
   const [myQuery, setmyQuery] = useState(pathname);
   const [filterKeyword, setFilterKeyword] = useState("");
   const [loading, setLoading] = useState(false);
-
-
 
   useEffect(() => {
     setLoading(true)
@@ -31,7 +33,7 @@ function BlogList(props) {
     let category;
     if(props.cat === "blogs") {
       category = "blogs"
-    }
+    } 
     if(props.cat === "sliders") {
       category = "sliders"
     }
@@ -48,40 +50,50 @@ function BlogList(props) {
 
 
     const blogsRef = collection(db, category);
+
+    //timstamp sort
     let queryAll = query(blogsRef, orderBy("timeStamp", "desc"));
 
+    if (props.cat === 'blogs') {
+       queryAll = query(blogsRef, orderBy("blog_date", "desc"));
+    // setBlogsAll(blogsAllRedux)
 
+    } 
 
     if (props.cat === "sliders") {
       queryAll = query(blogsRef, orderBy("timeStamp", "desc"));
     }
+    if (props.cat === "transactions") {
+      queryAll = query(blogsRef, orderBy("transactions_year", "desc"));
+    }
+  
     if (props.cat === "team") {
       queryAll = query(blogsRef, orderBy("member_name", "asc"));
     }
-    if (myQuery.includes("all") || myQuery.includes("transactions")) {
-      queryAll = query(blogsRef, orderBy("timeStamp", "desc"));
-    }
-    if (myQuery.includes("awards")) {
-      queryAll = query(
-        blogsRef,
-        orderBy("timeStamp", "desc"),
-        where("blog_type", "array-contains", "awards")
-      );
-    }
-    if (myQuery.includes("deals")) {
-      queryAll = query(
-        blogsRef,
-        orderBy("timeStamp", "desc"),
-        where("blog_type", "array-contains", "deals")
-      );
-    }
-    if (myQuery.includes("articles")) {
-      queryAll = query(
-        blogsRef,
-        orderBy("timeStamp", "desc"),
-        where("blog_type", "array-contains", "articles")
-      );
-    }
+    // if (myQuery.includes("all") || myQuery.includes("transactions")) {
+    //   queryAll = query(blogsRef, orderBy("timeStamp", "desc"));
+    // }
+    // if (myQuery.includes("awards")) {
+    //   queryAll = query(
+    //     blogsRef,
+    //     orderBy("timeStamp", "desc"),
+    //     where("blog_type", "array-contains", "awards")
+    //   );
+    // }
+    // if (myQuery.includes("deals")) {
+    //   queryAll = query(
+    //     blogsRef,
+    //     orderBy("timeStamp", "desc"),
+    //     where("blog_type", "array-contains", "deals")
+    //   );
+    // }
+    // if (myQuery.includes("articles")) {
+    //   queryAll = query(
+    //     blogsRef,
+    //     orderBy("timeStamp", "desc"),
+    //     where("blog_type", "array-contains", "articles")
+    //   );
+    // }
 
 
       const unsub = onSnapshot(queryAll, (snapShot) => {
@@ -111,39 +123,35 @@ function BlogList(props) {
           })
           let final = clareAndGoncalo.concat(sortedTeamArray)
           setBlogsAll(final)
+        } 
       
-          
-        } else {
+        else {
           setBlogsAll(list)
         }
-          
           setLoading(false)
-        });
+      });
+      return () =>  unsub() 
       
-        return () =>  unsub() 
- 
   }, [pathname]);
 
 
   //TRANSACTIONS AR CHANS ROCA MYQUERY IS ACTIVE
-
   useEffect(() => {
-
-
     let locationRaw = pathname.split("/");
     locationRaw = locationRaw[locationRaw.length - 1];
 
   
 
     const blogsRef = collection(db, "blogs");
-    let queryAll = query(blogsRef, orderBy("timeStamp", "desc"));
+        //timstamp sort
+    let queryAll = query(blogsRef, orderBy("blog_date", "desc"));
 
       // FILTERS
     if (pathname.includes("bloglist")) {
       if (myQuery.includes("archived")&& locationRaw !== "all") {
             queryAll = query(
               blogsRef,
-              orderBy("timeStamp", "desc"),
+              orderBy("blog_date", "desc"),
               where("blog_status", "==", "archived"),
               where("blog_type", "array-contains", locationRaw)
             );
@@ -151,7 +159,7 @@ function BlogList(props) {
           if (myQuery.includes("archived")&& locationRaw === "all") {
             queryAll = query(
               blogsRef,
-              orderBy("timeStamp", "desc"),
+              orderBy("blog_date", "desc"),
               where("blog_status", "==", "archived")
             );
           }
@@ -159,7 +167,7 @@ function BlogList(props) {
           if (myQuery.includes("active") && locationRaw !== "all") {
             queryAll = query(
               blogsRef,
-              orderBy("timeStamp", "desc"),
+              orderBy("blog_date", "desc"),
               where("blog_status", "==", "active"),
               where("blog_type", "array-contains", locationRaw)
             );
@@ -167,17 +175,17 @@ function BlogList(props) {
           if (myQuery.includes("active") && locationRaw === "all") {
             queryAll = query(
               blogsRef,
-              orderBy("timeStamp", "desc"),
+              orderBy("blog_date", "desc"),
               where("blog_status", "==", "active"),
             );
           }
 
           if (myQuery.includes("clear") && locationRaw !== "all") {
-            queryAll = query(blogsRef,orderBy("timeStamp", "desc"),where("blog_type", "array-contains", locationRaw));
+            queryAll = query(blogsRef,orderBy("blog_date", "desc"),where("blog_type", "array-contains", locationRaw));
           }
 
           if (myQuery.includes("clear") && locationRaw === "all") {
-            queryAll = query(blogsRef,orderBy("timeStamp", "desc")
+            queryAll = query(blogsRef,orderBy("blog_date", "desc")
           )}
 
 
@@ -198,15 +206,13 @@ function BlogList(props) {
   }, [myQuery])
 
 
+
  
-
-
 
 
   return (
     <>
       <div>
-
         <Header
           title="Blogs"
           hasCategories={props.hasCategories}
@@ -219,11 +225,17 @@ function BlogList(props) {
         />
 
         {props.cat === "team" && (
-          <MyTable
-            blogsAll={blogsAll}
-            setBlogsAll={setBlogsAll}
-            cat={props.cat}
-            loading={loading}
+          // <MyTable
+          //   blogsAll={blogsAll}
+          //   setBlogsAll={setBlogsAll}
+          //   cat={props.cat}
+          //   loading={loading}
+          // />
+          <TableDraggable 
+          blogsAll={blogsAll}
+          setBlogsAll={setBlogsAll}
+          cat={props.cat}
+          loading={loading}
           />
         )}
 
@@ -245,12 +257,20 @@ function BlogList(props) {
         )}
 
         {props.cat === "transactions" && (
-          <MyTable
-            blogsAll={blogsAll}
-            setBlogsAll={blogsTransactions}
-            cat={props.cat}
-            filter={"transactions"}
-            loading={loading}
+          // <MyTable
+          //   blogsAll={blogsAll}
+          //   setBlogsAll={blogsTransactions}
+          //   cat={props.cat}
+          //   filter={"transactions"}
+          //   loading={loading}
+          // />
+
+          <TableDraggable 
+          blogtransactions={blogsAll}
+          setBlogsAll={setBlogsAll}
+          cat={props.cat}
+          filter={"transactions"}
+          loading={loading}
           />
         )}
       </div>

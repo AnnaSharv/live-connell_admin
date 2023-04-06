@@ -22,7 +22,7 @@ function Bloginside({cat}) {
           <Blogheader title="Blog" permaLink={permaLink} hasPermaLink={true} cat={cat}/>
           <Blogform setPermaLink={setPermaLink} permaLink={permaLink} cat={cat}/>
         </>
-        }
+        } 
         {cat === "team" &&   
         <>
          <Blogheader title="Team member" cat={cat}/>

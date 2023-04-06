@@ -25,6 +25,9 @@ import {websiteDomain} from '../App.js'
 
 function Blogform({permaLink, setPermaLink, cat}) {
  const {pathname} = useLocation()
+ const location = useLocation();
+ const orderId = location.state?.blogLength + 1
+
     const website_domain = websiteDomain
     const navigate = useNavigate()
     const [myid, setmyid] = useState(uuid())
@@ -78,7 +81,6 @@ function Blogform({permaLink, setPermaLink, cat}) {
             break;
         case "03" || "3":
             monthName = "Mar"
-            console.log("firsxt")
             break;
         case "04" || "4":
             monthName = "Apr"
@@ -362,6 +364,7 @@ function Blogform({permaLink, setPermaLink, cat}) {
             await setDoc(doc(db, "team", currId || myid), {
                 draft_id: myid,
                 id: currId || myid,
+                orderId: vals.orderId,
                 timeStamp: Date.now(),
                 member_name: vals.member_name,
                 member_position: vals.member_position,
@@ -389,7 +392,7 @@ function Blogform({permaLink, setPermaLink, cat}) {
                 await deleteDoc(doc(db, "drafts", myid));
             }
             del()
-            console.log("del", myid)
+           // console.log("del", myid)
 
           } catch (e) {
             console.error("Error adding document: ", e);
@@ -492,6 +495,7 @@ function Blogform({permaLink, setPermaLink, cat}) {
               arr_temp.push({id: docId, data: docSnap.data()})
               setDocId(arr_temp[0]?.id)
               if (formRef.current) {
+                formRef.current.setFieldValue("orderId", arr_temp[0].data?.orderId);
                 formRef.current.setFieldValue("member_name", arr_temp[0].data?.member_name);
                 formRef.current.setFieldValue("member_position", arr_temp[0].data?.member_position);
                 formRef.current.setFieldValue("member_contact", arr_temp[0].data?.member_contact);
@@ -520,7 +524,7 @@ function Blogform({permaLink, setPermaLink, cat}) {
          getCurrentDoc()
         
        
-     
+   
       
     }, [])
 
@@ -534,6 +538,7 @@ function Blogform({permaLink, setPermaLink, cat}) {
             initialValues={{
                 timeStamp: Date.now(),
                 status:"on",
+                orderId: orderId,
                 draft_id:"",
                 member_name: "",
                 member_position:"",

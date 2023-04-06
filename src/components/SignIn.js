@@ -5,6 +5,24 @@ import * as Yup from 'yup';
 import { UserAuth } from '../context';
 
 import { UserContext } from '../pages/UserContext';
+import { Button } from 'antd';
+const styles = {
+  input: {
+    height: 40,
+    fontSize: 14,
+    margin: '5px 0 10px'
+  },
+  button: {
+    height: 40,
+    backgroundColor: '#1D4696'
+  },
+  error: {
+    fontSize: 12,
+    marginTop: -8,
+    marginBottom: 8,
+    color: '#c74c42'
+  }
+}
 
 export const SignIn = () => {
   const navigate = useNavigate()
@@ -45,16 +63,22 @@ export const SignIn = () => {
      >
        <Form>
          <label htmlFor="password">Admin email</label>
-         <Field name="email" type="email" className="form-control w-100" placeholder="admin@admin.com" />
-         <ErrorMessage name="email" />
+         <Field name="email" type="email" className="form-control w-100"   style={styles.input}/>
+         <div style={styles.error}>
+          <ErrorMessage name="email" />
+         </div>
+         
  
          <label htmlFor="password">Admin password</label>
-         <Field name="password" type="password" className="form-control" placeholder="123456"/>
-         <ErrorMessage name="password" />
+         <Field name="password" type="password" className="form-control"  style={styles.input}/>
+         <div style={styles.error}>
+          <ErrorMessage name="password" />
+         </div>
+         
  
 
          <div className='text-danger'>{errorMessage}</div>
-         <button type="submit" className='btn btn-primary mt-3 w-100 fs-4'>Log in</button>
+         <Button htmlType='submit' className='btn btn-primary mt-3 w-100 fs-4' style={styles.button}>Log in</Button>
 
          
        </Form>

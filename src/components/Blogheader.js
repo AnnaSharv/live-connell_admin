@@ -7,6 +7,8 @@ import Editlogo from "../assets/icons/edit.svg"
 import { motion } from "framer-motion"
 // import { index } from '../App';
 
+
+
 function Blogheader(props) {
 const {pathname} = useLocation()
 const [addOrEdit, setAddOrEdit] = useState('Add')
@@ -14,6 +16,9 @@ const [check, setCheck] = useState({
   active: false,
   archived: false
 })
+
+
+
 
 
 
@@ -64,7 +69,7 @@ useEffect(() => {
       {props.category === "transactions" && (
         <div className="blog_header justify-content-between">
           <h1>Recent transactions</h1>
-          <Link to="/addTransaction">
+          <Link to="/addTransaction" state={{blogLength: props.blogsAll.length}}>
             <button type="button" className="button-publish w-auto">
               Create new
             </button>
@@ -79,7 +84,7 @@ useEffect(() => {
       {props.category === "team" && (
         <div className="blog_header justify-content-between">
           <h1>Team members</h1>
-          <Link to="/addMember">
+          <Link to="/addMember" state={{blogLength: props.blogsAll.length }}>
             <button type="button" className="button-publish w-auto">
               Create new
             </button>
@@ -96,11 +101,11 @@ useEffect(() => {
               <span>
                 Permalink:
                 <a
-                  href={props.permaLink}
+                  href={`//${props.permaLink}`}
                   target="_blank"
                   title={props.permaLink}
                 >
-                  {props.permaLink}
+                  {props.permaLink} 
                 </a>
                 <img src={Editlogo} width="16px" alt="edit_icon" />
               </span>
@@ -138,7 +143,26 @@ useEffect(() => {
                     }
                     onClick={() => props.setmyQuery("all")}
                   >
-                    All <span>&#40;{props.blogsAll.length || 0}&#41;</span>
+                    All <span>&#40;{props.blogsAll?.length || 0}&#41;</span>
+                  </button>
+                </Link>
+              </motion.li>
+              <motion.li
+                initial={{ opacity: 1 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <Link to="news">
+                  <button
+                    type="button"
+                    className={
+                      pathname.includes("news")
+                        ? "button-publish link-active"
+                        : "button-no-publish"
+                    }
+                    onClick={() => props.setmyQuery("news")}
+                  >
+                    News <span>&#40;{props.blogsAll?.length || 0}&#41;</span>
                   </button>
                 </Link>
               </motion.li>
@@ -157,7 +181,7 @@ useEffect(() => {
                     }
                     onClick={() => props.setmyQuery("awards")}
                   >
-                    Awards <span>&#40;{props.blogsAll.length || 0}&#41;</span>
+                    Awards <span>&#40;{props.blogsAll?.length || 0}&#41;</span>
                   </button>
                 </Link>
               </motion.li>
@@ -176,7 +200,7 @@ useEffect(() => {
                     }
                     onClick={() => props.setmyQuery("articles")}
                   >
-                    Articles <span>&#40;{props.blogsAll.length || 0}&#41;</span>
+                    Articles <span>&#40;{props.blogsAll?.length || 0}&#41;</span>
                   </button>
                 </Link>
               </motion.li>
@@ -195,7 +219,7 @@ useEffect(() => {
                     }
                     onClick={() => props.setmyQuery("deals")}
                   >
-                    Deals <span>&#40;{props.blogsAll.length || 0}&#41;</span>
+                    Deals <span>&#40;{props.blogsAll?.length || 0}&#41;</span>
                   </button>
                 </Link>
               </motion.li>

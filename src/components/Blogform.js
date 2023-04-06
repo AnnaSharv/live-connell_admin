@@ -1,5 +1,5 @@
-import React, {useRef, useState, useEffect, useMemo} from 'react'
-
+import React, {useRef, useState, useEffect} from 'react'
+import { format, parse } from 'date-fns';
 import { Formik, Form, ErrorMessage, useField, useFormikContext } from 'formik';
 import { v4 as uuid } from 'uuid';
 import { db } from "../pages/firebase";
@@ -20,6 +20,10 @@ import ModalPreview from './modalPreview';
 import { useLocation, useNavigate } from 'react-router-dom';
 import UploadfromGallery from './UploadfromGallery';
 import {websiteDomain} from '../App.js'
+
+
+import formatDate from '../utils/formatDate';
+import EmbedArticle from './EmbedArticle';
  
 function Blogform({permaLink, setPermaLink, cat}) {
  const {pathname} = useLocation()
@@ -34,6 +38,16 @@ function Blogform({permaLink, setPermaLink, cat}) {
     const [uploadProgress, setUploadProgress] = useState(false)
     const [ufd, setUFD] = useState(true)
     const [ufg, setUFG] = useState(true)
+
+    const [pdf, setPdf] = useState({
+        firebaseLink:'',
+        name:null,
+        size:null
+    })
+
+
+    
+    
 
     function formatBytes(bytes, decimals = 2) {
         if (!+bytes) return null
@@ -111,29 +125,44 @@ function Blogform({permaLink, setPermaLink, cat}) {
             break;
     }
     const mydate = `${monthName} ${day}, ${year}`
- 
+    const date = parse(mydate, "MMM dd, yyyy", new Date());
+    const isoDate = format(date, "yyyy-MM-dd");
+
+
+
+
+  
+
 
 
     // Get the query parameters as an object
 
- const displayPermalink = (text) => {
+ const displayPermalink = (text, _, id) => {
     let str = text.toLowerCase().split(" ")
     let formattedString = str.slice(0,5).join("-")
     let currId = pathname.split("blog_id=")[1] 
-    const newId = myid
-    if(currId == undefined || currId == null) {
-        setPermaLink(`${website_domain}/news/blogs/${formattedString}?id=${newId}`)  
-    } else {
-        setPermaLink(`${website_domain}/news/blogs/${formattedString}?id=${currId}`)   
-    }
+
+    let url = `${website_domain}/#/news/blogs/${text.toLowerCase().split(" ").join("-").substring(0, 50)}?id=${id}`
+    
+
+    setPermaLink(url)
  }
 
+useEffect(() => {
+    let str = "your_blog".toLowerCase().split(" ")
+    let formattedString = str.join("-").substring(0, 50)
+    let currId = pathname.split("blog_id=")[1] 
+
+    let url = `${website_domain}/#/news/blogs/${formattedString}?id=${currId}`
+    setPermaLink(url)
+
+}, [])
 
 
     //const [go, setgo] = useState(false)
     const BlogTitle = (props) => {
         const {
-            values: { blog_type },
+            values: { blog_type, id },
             setFieldValue
         } = useFormikContext()
         const [field] = useField(props)
@@ -145,10 +174,7 @@ function Blogform({permaLink, setPermaLink, cat}) {
             placeholder="Enter blog title"
             onChange={(e) => {
                 setFieldValue(props.name, e.target.value)
-                displayPermalink(e.target.value, blog_type, props.draft_id)
-                
-                
-              //  setgo((prevVal) => !prevVal)
+                displayPermalink(e.target.value, blog_type, id, props.draft_id)
             }}
             />
         )
@@ -252,6 +278,11 @@ function Blogform({permaLink, setPermaLink, cat}) {
             onChange={handleChange}
             optionLabelProp="label"
           >
+            <Option value="news" label="News">
+              <div className="demo-option-label-item">
+                News
+              </div>
+            </Option>
             <Option value="articles" label="Articles">
               <div className="demo-option-label-item">
                 Articles
@@ -301,7 +332,6 @@ function Blogform({permaLink, setPermaLink, cat}) {
         return (
             <div>
                 <input hidden type="file" ref={upload} multiple onChange={(e) => { 
-
                    for (let i = 0; i < e.target.files.length; i++) {                    
                     const image_name = e.target.files[i].name + new Date().getTime();
                     const storageRef = ref(storage, image_name);
@@ -372,7 +402,7 @@ function Blogform({permaLink, setPermaLink, cat}) {
                                 //if upload from device is true
                               ufd === true && imgArray.length > 0 ?
                                 imgArray.map((img,i) => {
-                                    return <span key={i} className='span-ellipse'>{img.blog_image_name} {formatBytes(img.blog_image_size)}</span>
+                                    return <div key={i} className='span-ellipse' title={img.blog_image_name}>{img.blog_image_name} <div>{formatBytes(img.blog_image_size)}</div></div>
                                 })
                                 : 
                                 <span> Upload from device </span>
@@ -380,7 +410,6 @@ function Blogform({permaLink, setPermaLink, cat}) {
                           
                         </div>
                     </div>
-    
                     <Button loading={uploadProgress} className='button-no_outline_primary' style={{"width":"auto"}} type='button' onClick={() => upload.current.click()}> UPLOAD </Button>
                 </div>
             </div>
@@ -399,7 +428,8 @@ function Blogform({permaLink, setPermaLink, cat}) {
                 id: currId || myid,
                 timeStamp: Date.now(),
                 blog_title: vals.blog_title,
-                blog_body: vals.blog_body ,
+                blog_body: vals.blog_body,
+                blog_pdf: pdf,
                 imgArr: imgArray,
                 blog_status: blogstatus || vals.blog_status,
                 blog_type: vals.blog_type,
@@ -407,7 +437,6 @@ function Blogform({permaLink, setPermaLink, cat}) {
                 blog_permalink: permaLink.split('=')[0] + '=' + permaLink.split('=')[1].replace(permaLink.split('=')[1], myid).toString()
             }); 
 
-           // console.log("THESE VALUES ARE BEING SENT", vals, imgArray, blogstatus, permaLink)
             !currId && await updateDoc(countRef, {
                 blogs: increment(1)
             });
@@ -458,6 +487,7 @@ function Blogform({permaLink, setPermaLink, cat}) {
                 formRef.current.setFieldValue("id", arr_temp[0].data?.id);
                 formRef.current.setFieldValue("blog_title", arr_temp[0].data?.blog_title);
                 formRef.current.setFieldValue("blog_body", arr_temp[0].data?.blog_body);
+                formRef.current.setFieldValue("blog_pdf", arr_temp[0].data?.blog_pdf);
                 formRef.current.setFieldValue("blog_status", arr_temp[0].data?.blog_status);
                 formRef.current.setFieldValue("blog_type", arr_temp[0].data?.blog_type);
                 formRef.current.setFieldValue("blog_date", arr_temp[0].data?.blog_date);
@@ -467,7 +497,7 @@ function Blogform({permaLink, setPermaLink, cat}) {
                 formRef.current.setFieldValue("blog_image_size", arr_temp[0].data?.blog_image_size);
                 formRef.current.setFieldValue("blog_permalink", arr_temp[0].data?.blog_permalink);
                 setBlogImg({...blogImg, firebaseLink: arr_temp[0].data?.blog_image, name:arr_temp[0].data?.blog_image_name, size:arr_temp[0].data?.blog_image_size })
-                setPermaLink(arr_temp[0].data?.blog_permalink)
+               // setPermaLink(arr_temp[0].data?.blog_permalink)
                 setImgArray(arr_temp[0].data?.imgArr)
               }
 
@@ -493,8 +523,6 @@ function Blogform({permaLink, setPermaLink, cat}) {
      return (
         <>
          <div className="blog_form">
-      
-        
             <Formik
             innerRef={formRef}
             initialValues={{
@@ -503,13 +531,14 @@ function Blogform({permaLink, setPermaLink, cat}) {
                 draft_id:"",
                 blog_title: "",
                 blog_body: "" ,
+                blog_pdf: pdf ,
                 blog_image: "",
                 imgArr: [],
                 blog_image_name: "",
                 blog_image_size: "",
                 blog_status: "active",
-                blog_type: ["articles"],
-                blog_date: mydate,
+                blog_type: ["news"],
+                blog_date: isoDate,
                 permalink: permaLink
             }}
             validationSchema = {Yup.object({
@@ -535,7 +564,6 @@ function Blogform({permaLink, setPermaLink, cat}) {
                         <div className="blog_form_header">
                          
                             {blogTitleMemo}
-                           
                              {/* <BlogTitle name="blog_title" /> */}
                             <ErrorMessage name="blog_title" />
                         </div>
@@ -581,10 +609,14 @@ function Blogform({permaLink, setPermaLink, cat}) {
                                     </span>
                                 </div>
                                 <div>
-                                    <label htmlFor="type">Date:</label>
+                                    <label htmlFor="type">Date (YYYY-MM-DD):</label>
                                     <SelectDate name="blog_date" type="text" as="select"/>
                                     <span style={{color:"transparent"}}> x </span>
                                 </div>
+                            </div>
+
+                            <div className='content_wrapper'>
+                                <EmbedArticle setPdf={setPdf} pdf={formRef.current?.values.blog_pdf}/>
                             </div>
 
                             <div className='upload_image' >

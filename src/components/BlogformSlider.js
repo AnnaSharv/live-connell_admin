@@ -494,7 +494,7 @@ function BlogformSlider() {
 
                             <div className='content_wrapper button-group'>
                             <ModalDuplicate record={formRef.current?.values} dbName={"sliders"}  />
-                            <ModalDelete docId={docId} dbName={"sliders"} redirect={true}/>
+                            <ModalDelete docId={id} dbName={"sliders"} redirect={true}/>
                             </div> 
 
 

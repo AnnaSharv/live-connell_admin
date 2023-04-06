@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Table, Tag, Switch,Dropdown, Space, Menu, message } from 'antd';
 import { db } from '../pages/firebase';
 import {  doc, updateDoc } from "firebase/firestore";
@@ -8,19 +8,30 @@ import Dots from '../assets/icons/dots.svg'
 import ModalDelete from './modalDelete';
 import ModalDuplicate from './modalDuplicate';
 import parse from 'html-react-parser';
-import {adminDomain} from '../App.js'
+import {websiteDomain} from '../App.js'
+import {formatBlogType} from '../utils/formatBlogType'
 
-const MyTable = ({blogsAll, setBlogsAll, cat, filter, loading}) => {
-  const url = adminDomain
-  const navigate = useNavigate();
-  const [blockRedirect, setBlockRedirect] = useState(false)
+
+import formatDate from '../utils/formatDate';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+
+const MyTable = ({blogsAll, cat, loading}) => {
+
+  const totalRows = blogsAll?.length || 0;
+
+
   const [messageApi, contextHolder] = message.useMessage();
+
+
   const success = (data) => {
+    const {blog_title,id} = data
+    let url = `${websiteDomain}/#/news/blogs/${blog_title.toLowerCase().split(" ").join("-").substring(0, 50)}?id=${id}`
+
     async function copyTextToClipboard() {
       if ('clipboard' in navigator) {
-        return await navigator.clipboard.writeText(data);
+        return await navigator.clipboard.writeText(url);
       } else {
-        return document.execCommand('copy', true, data);
+        return document.execCommand('copy', true, url);
       }
     }
     copyTextToClipboard()
@@ -51,11 +62,12 @@ let convertTimeStamp = (timeStamp) => {
     
   return (
     <>
-      {months > 1 &&  <span>{months} month ago</span>}
-      {days >= 1 &&  <span>{days} d ago</span>}
+      {months >= 1 && <span>{months} month(s) ago</span>}
+      {months === 0 && days >= 1 &&  <span>{days} d ago</span>}
       {months === 0 && days === 0 && hours !== 0 && <span>{hours} h ago</span>}
       {months === 0 && days === 0 && hours === 0 && minutes > 0 &&<span>{minutes} mins {seconds} sec ago</span>}
       {months === 0 && days === 0 && hours === 0 && minutes === 0 && <span> {seconds} s ago</span>}
+      
     </>
   );
 
@@ -111,25 +123,22 @@ if (cat === "transactions") {
   // }
 }
  
- let c = 1
  let columns;
  let dataid;
+ 
+
  if (cat === "sliders") {
   columns = [
+   
     {
-      title: "N",
+      title: 'No.',
+      align: 'center',
       // dataIndex: 'id',
-      width: "12%",
-      render: (data) => {
-        return (
-          <Link
-            to={`/edit-slider/edit?slider_id=${data.id}`}
-            className={data?.slider_name?.length > 35 ? "text-elipse" : null}
-          >
-            {" "}
-            {c++}{" "}
-          </Link>
-        );
+      width: "7%",
+      render: (data, record, index) => {
+        return <Link to={`/edit-slider/edit?slider_id=${data.id}`}  className={data?.slider_name?.length > 35 ? "text-elipse" : null}> 
+            {totalRows - (tableParams.pagination.current - 1) * tableParams.pagination.pageSize - index}.
+        </Link> 
       },
     },
     {
@@ -212,10 +221,6 @@ if (cat === "transactions") {
       width: "16%",
       dataIndex: "slider_status",
       render: (_, record) => (
-        <Link
-          to={`/edit-slider/edit?slider_id=${record.id}`}
-          className={_?.slider_name?.length > 35 ? "text-elipse" : null}
-        >
           <div
             style={{
               display: "flex",
@@ -232,7 +237,7 @@ if (cat === "transactions") {
             <Dropdown
               dropdownRender={() => (
                 <div className="dropdown-content my-dropdown my-dropdown-for-table">
-                  <Menu onMouseEnter={() => setBlockRedirect(true)}>
+                  <Menu>
                     <Menu.Item
                       key="ad"
                       className="my-dropdown-list-item"
@@ -246,7 +251,6 @@ if (cat === "transactions") {
                     <Menu.Item
                       key="dupl"
                       className="my-dropdown-list-item"
-                      onClick={() => setBlockRedirect(true)}
                     >
                       <ModalDuplicate
                         record={record}
@@ -257,7 +261,6 @@ if (cat === "transactions") {
                     <Menu.Item
                       key="del"
                       className="my-dropdown-list-item"
-                      onClick={() => setBlockRedirect(true)}
                     >
                       <ModalDelete
                         docId={record.id}
@@ -276,25 +279,27 @@ if (cat === "transactions") {
               </a>
             </Dropdown>
           </div>
-        </Link>
       ),
     },
   ];
 }
   if (cat === "blogs") {
-    columns = [
+    columns = [ 
       {
-        title: 'ID',
+        title: 'No.',
+        align: 'center',
         // dataIndex: 'id',
         width: "7%",
-        render: (data) => {
-          return <Link to={`/bloginside/edit/blog_id=${data.id}`} className={data?.blog_title?.length > 35 ? "text-elipse" : null}> {c++} </Link> 
+        render: (data, record, index) => {
+          return <Link to={`/bloginside/edit/blog_id=${data.id}`} className={data?.blog_title?.length > 35 ? "text-elipse text-center" : null}> 
+              {totalRows - (tableParams.pagination.current - 1) * tableParams.pagination.pageSize - index}.
+          </Link> 
         },
       },
       {
         title: 'Name',
         // sorter: true,
-        render: (data) => <Link to={`/bloginside/edit/blog_id=${data.id}`} className={data?.blog_title?.length > 35 ? "text-elipse" : null}> {data.blog_title} </Link> ,
+        render: (data) => <Link to={`/bloginside/edit/blog_id=${data.id}`} className={data?.blog_title?.length > 35 ? "text-elipse" : null}> {data?.blog_title} </Link> ,
         width: "25%",
         ellipsis: {
             showTitle: false,
@@ -305,13 +310,13 @@ if (cat === "transactions") {
         //dataIndex:  "blog_permalink",
         width: "7%",
         // sorter:true,
-        render: (data) => <div onClick={() => success(data.blog_permalink)} style={{"cursor":"pointer"}}> {contextHolder} <img src={Copy} alt=""/></div> 
+        render: (data) => <div onClick={() => success(data)} style={{"cursor":"pointer"}}> {contextHolder} <img src={Copy} alt=""/></div> 
       },
       {
         title: 'Type',
         //dataIndex: "blog_type",
-        render: (data) => <Link to={`/bloginside/edit/blog_id=${data.id}`} className={data?.blog_title?.length > 35 ? "text-elipse" : null}> 
-                              <div className='table-blog_type blog_type_multiwords'> {data.blog_type} </div> 
+        render: (data) => <Link to={`/bloginside/edit/blog_id=${data.id}`}> 
+                              <div className='table-blog_type blog_type_multiwords'> {formatBlogType(data?.blog_type)} </div> 
                            </Link>
       },
       {
@@ -330,14 +335,14 @@ if (cat === "transactions") {
         title: 'Create date',
        // dataIndex: "blog_date",
         render: (data) => <Link to={`/bloginside/edit/blog_id=${data.id}`} className={data?.blog_title?.length > 35 ? "text-elipse" : null}>
-           <div>{data.blog_date}  </div>
+           <div>{formatDate(data?.blog_date)}</div>
           </Link> ,
       },
       {
         title: 'Update date',
         // dataIndex: "timeStamp",
      
-        render: (data) => <Link to={`/bloginside/edit/blog_id=${data.id}`} className={data?.blog_title?.length > 35 ? "text-elipse" : null}>
+        render: (data) => <Link to={`/bloginside/edit/blog_id=${data.id}`} >
           <div> {convertTimeStamp(data.timeStamp)} </div>
           </Link>,
       },
@@ -380,11 +385,14 @@ if (cat === "transactions") {
   if (cat === "transactions") {
     columns = [
       {
-        title: 'ID',
+        title: 'No.',
         // dataIndex: 'id',
-        width: "5%",
-        render: (data) => {
-          return <Link  to={`/addTransaction/edit/transaction_id=${data.id}`}  className={data?.transactions_title?.length >= 35 ? "text-elipse" : null}>  {c++} </Link> 
+        width: "7%",
+        align: 'center',
+        render: (data, _, index) => {
+          return <Link  to={`/addTransaction/edit/transaction_id=${data.id}`}  className={data?.transactions_title?.length >= 35 ? "text-elipse" : null}>  
+                  {totalRows - (tableParams.pagination.current - 1) * tableParams.pagination.pageSize - index}.
+           </Link> 
         },
       },
       {
@@ -460,16 +468,17 @@ if (cat === "transactions") {
   if (cat === "team") {
    columns = [
       {
-        title: 'ID',
-         dataIndex: 'id',
+        title: 'No.',
+        dataIndex: 'id',
+        align: 'center',
         width: "7%",
-        render: (data) => <Link to={`/members/edit/blog_id=${data.id}`}> {c++}</Link>
+        render: (data, _, index) => <Link to={`/members/edit/blog_id=${data.id}`}> {totalRows - (tableParams.pagination.current - 1) * tableParams.pagination.pageSize - index}.</Link>
       },
       {
         title: 'Image',
         width: "10%",
       //   dataIndex: "member_img",
-        render: (data) => <img src={data.blog_image} alt="" style={{"width":"50px"}} />,
+        render: (data) => <LazyLoadImage effect='blur' src={data.blog_image} alt="" style={{"width":"50px"}} />,
       },
       {
         title: 'Name',
@@ -485,14 +494,14 @@ if (cat === "transactions") {
        // dataIndex: "member_description",
         width: "25%",
         render: (data) =>  <Link to={`/members/edit/blog_id=${data.id}`}> 
-                              <span className={data.length >= 35 ? "text-elipse" : null}> {parse(data.member_description)} </span> 
+                              <span className={data.member_description?.length >= 35 ? "text-elipse" : null}> {parse(data.member_description)} </span> 
                           </Link>
       },
       {
         title: 'Contact',
        // dataIndex: "member_contact",
         width: "10%",
-        render: (data) => <Link to={`/members/edit/blog_id=${data.id}`}> <div>{data.member_contact.length > 0 ? data.member_contact : "-"}</div> </Link>
+        render: (data) => <Link to={`/members/edit/blog_id=${data.id}`}> <div>{data.member_contact?.length > 0 ? data.member_contact : "-"}</div> </Link>
         // render: (data) => <div>{data.length > 0 ? data : "-"}</div>
       },
       {
@@ -545,7 +554,7 @@ if (cat === "transactions") {
   }
  
     
-
+ 
 
 
   
@@ -564,25 +573,21 @@ if (cat === "transactions") {
     });
   };
 
-
+  const onRow = (record, rowIndex) => {
+    return {
+      onClick: (event) => {
+       // console.log(record, rowIndex);
+      },
+    };
+  };
 
   return (
     <>
+
     <Table
         columns={columns}
         rowKey={(record) => record.id + Math.random()}
-        onRow={(record, rowIndex) => {
-          return {
-            onClick: (event) => {              
-              // location.pathname.includes('members') &&  navigate(`edit/blog_id=${record.id}`)
-              // location.pathname.includes('transactions') &&  navigate(`/addTransaction/edit/blog_id=${record.id}`)
-
-              // if(blockRedirect === false &&  location.pathname.includes('bloglist')) {
-              //   navigate(`/bloginside/edit/blog_id=${record.id}`)
-              // }
-            }, 
-          };
-        }}
+        onRow={onRow}
         dataSource={blogsAll || null}
         pagination={tableParams.pagination}
         loading={loading}

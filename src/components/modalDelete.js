@@ -26,6 +26,7 @@ const ModalDelete = ({docId, dbName, setBlogsAll, redirect, decrementfield}) => 
           // console.log(decrementfield, field, dbName, "o")
           setOpen(false)
           const del = async () => {
+            console.log("dellll", db, dbName, "dbname", docId, "docid")
             await deleteDoc(doc(db, dbName, docId));
           //  if(redirect) {
           //   dbName === "team" 
@@ -33,33 +34,30 @@ const ModalDelete = ({docId, dbName, setBlogsAll, redirect, decrementfield}) => 
           //   : dbName === "transactions" ? window.location.href = adminDomain + "/transactions" 
           //   : window.location.href = adminDomain + "/bloglist/all"
           //  }
-           if(redirect) {
-            dbName === "team" 
-            ? navigate(-1)
-            : dbName === "transactions" ? window.location.href = admin_domain + "/transactions" 
-            : navigate(-1)
-           }
+          
             
           }
-          del()
+          del().then(() => {
+            decr()
+            if(redirect) {
+              dbName === "team" 
+              ? navigate(-1)
+              : dbName === "transactions" ? navigate(-1)
+              // : dbName === "transactions" ? window.location.href = admin_domain + "/transactions" 
+              : navigate(-1)
+             }
+          }).catch(() => {
+            alert('Oops! Something went wrong while trying to delete the item. Please remove it manually from the table.');
+          })
 
           const decr = async () => {
             const countRef = doc(db, "length", "length");
-            // dbName === "blogs" && await updateDoc(countRef, {
-            //   blogs: increment(-1)
-            // });
-            // dbName === "team" && await updateDoc(countRef, {
-            //   members: increment(-1)
-            // });
-            // dbName === "transactions" && await updateDoc(countRef, {
-            //   transactions: increment(-1)
-            // });
              await updateDoc(countRef, {
               [dbName]: increment(-1)
             });
           }
 
-          decr()
+         
         }}
         onCancel={() => setOpen(false)}
         width={1000}

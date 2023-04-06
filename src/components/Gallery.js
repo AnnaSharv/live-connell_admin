@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { DeleteFilled, PlusOutlined, EyeOutlined } from "@ant-design/icons";
+import { DeleteFilled } from "@ant-design/icons";
 import { Modal as ModalAntd, Image, Button} from "antd";
 import {
   collection,
@@ -13,12 +13,13 @@ import { db } from "../pages/firebase";
 //import { motion } from "framer-motion";
 import { uploadImageAsPromise, deleteFromStorage } from "./c";
 //import ProgressBar from "./Progress";
-
+import GallerySearchPanel from "./GallerySearchPanel";
 
 
 import GalleryTest from 'react-photo-gallery';
 import Carousel, { Modal, ModalGateway } from "react-images";
 import { LazyLoadImage } from "react-lazy-load-image-component";
+
 
 
 const Gallery = () => {
@@ -35,8 +36,19 @@ const Gallery = () => {
     progress: 0
   })
   const [blogsAll, setBlogsAll] = useState([]);
-  const [loading, isLoading] = useState(false);
+  const [blogsAllfilter, setBlogsAllfilter] = useState([]);
  
+
+  function formatBytes(bytes, decimals = 2) {
+    if (!+bytes) return null
+    const k = 1024
+    const dm = decimals < 0 ? 0 : decimals
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
+}
 
   useEffect(() => {
     const blogsRef = collection(db, "images");
@@ -60,38 +72,68 @@ const Gallery = () => {
   };
  
 
-
+const link = ""
  
-  const photos = blogsAll.map(blog => ({
+  const photos = blogsAllfilter.length > 0 
+  ? blogsAllfilter.map(blog => ({
     id: blog.id,
-    src: blog.blog_image,
+    src: blog.blog_image || link,
     imgForStorage: blog.blog_image_name,
     isSelected: false,
+    timeStamp: blog.timeStamp,
+    blog_image: blog.blog_image,
+    blog_image_name: blog.blog_image_name,
+    blog_image_size: blog.blog_image_size,
     
+  }))
+  : blogsAll.map(blog => ({
+    id: blog.id,
+    src: blog.blog_image || link,
+    imgForStorage: blog.blog_image_name,
+    isSelected: false,
+    timeStamp: blog.timeStamp,
+    blog_image: blog.blog_image,
+    blog_image_name: blog.blog_image_name,
+    blog_image_size: blog.blog_image_size,
   }));
 
-  const [currentImage, setCurrentImage] = useState(0);
+ 
+  
+
+  const [currentImageGallery, setCurrentImageGallery] = useState(0);
   const [viewerIsOpen, setViewerIsOpen] = useState(false);
 
   const openLightbox = useCallback((event, { photo, index }) => {
-    setCurrentImage(index);
+    setCurrentImageGallery(index);
     setViewerIsOpen(true);
   }, []);
 
   const closeLightbox = () => {
-    setCurrentImage(0);
+    setCurrentImageGallery(0);
     setViewerIsOpen(false);
   };
   const deletePhoto = (photo) => {
-    setCurrentImg({...currentImg, img:photo.imgForStorage, id:photo.id})
+    
+    // if(blogsAllfilter.length !== 0) {
+    //   setCurrentImg({...currentImg, img:photo.imgForStorage, id:photo.id})
+    // }else {
+    //   setCurrentImg({...currentImg, img:photo.imgForStorage, id:photo.id})
+    // }
+    
+    
+      setCurrentImg({...currentImg, img:photo.imgForStorage, id:photo.id})
+    
+    
     showModal()
   };
 
   const imageRenderer = ({ index, onClick, photo, margin}) => {
+    const formattedImgSize = formatBytes(photo.blog_image_size)
+    
   
     return (
-      <div key={photo.key} style={{ margin, width: photo.width, height: photo.height, position: 'relative' }}>
-        <LazyLoadImage effect="blur" src={photo.src} alt={photo.title} style={{ display: 'block', width: '220px', aspectRatio:1/1, borderRadius: '8px', objectFit:'cover' }} onClick={e => onClick(e, { index })} />
+      <div key={photo.key} style={{ margin, width: photo.width,  position: 'relative' }}>
+        <LazyLoadImage effect="blur" title={`${photo.blog_image_name} ${formattedImgSize}`} src={photo.src} alt={photo.title} style={{ display: 'block', width: '220px', aspectRatio:1/1, borderRadius: '8px', objectFit:'cover' }} onClick={e => onClick(e, { index })} />
         <Button type="primary" 
           style={{ padding: '0 !important', display:'grid', placeContent:'center', position: 'absolute', top: '5px', right: '5px', color: 'black', cursor: 'pointer', width:'30px', height:'30px'}}
           onClick={(e) =>  deletePhoto(photo)}
@@ -105,12 +147,14 @@ const Gallery = () => {
   return (
     <>
       {/* <ProgressBar data={isUploading}/> */}
+      <GallerySearchPanel gallery={blogsAll} filteredGallery={blogsAllfilter} setFilteredGallery={setBlogsAllfilter}/>
+
       <div className="gallery-wrapper">
         <Button className="upload-button" onClick={() => galleryImg.current.click()} loading={isUploading.status}>
          
           {
             isUploading.status ? <div>Uploading, please wait...</div> 
-            :  <div>Upload image </div>
+            :  <div>Upload Media </div>
           }
         </Button>
       
@@ -125,7 +169,7 @@ const Gallery = () => {
           if(e.target.files) {
             for (var i = 0; i < e.target.files.length; i++) {
               var imageFile = e.target.files[i];
-              uploadImageAsPromise(imageFile, isLoading, "gallery", setIsUploading, isUploading);
+              uploadImageAsPromise(imageFile, "gallery", setIsUploading, isUploading);
             }
           }
           }}
@@ -136,7 +180,7 @@ const Gallery = () => {
             {viewerIsOpen ? (
               <Modal onClose={closeLightbox}>
                 <Carousel
-                  currentIndex={currentImage}
+                  currentIndex={currentImageGallery}
                   views={photos.map(x => ({
                     ...x,
                     srcset: x.srcSet,

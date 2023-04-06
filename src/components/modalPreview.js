@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import {  Modal, Row, Col } from 'antd';
+import {  Modal, Row, Col, Button } from 'antd';
 import parse from 'html-react-parser';
 import "react-responsive-carousel/lib/styles/carousel.min.css"; // requires a loader
 import { Carousel } from 'react-responsive-carousel';
@@ -39,10 +39,12 @@ const ModalPreview = ({vals, img, cat, images, fullWidth}) => {
                 <p className='member_text-subheader'>{vals.member_position}</p>
                 <div className='text-regular'>{parse(vals.member_description)}</div>
 
+               { vals.member_contact && 
                 <div class="email-wrapper" style={{display: 'flex', gap: '15px', marginTop: 40}}>
                   <img src={MailIcon} width={22} height={18}/>
                   <p className='text-regular-bold'>{vals.member_contact}</p>
                 </div>
+              }
 
             </Col>
           
@@ -53,23 +55,32 @@ const ModalPreview = ({vals, img, cat, images, fullWidth}) => {
           <div className='single-news container-custom'>
             <h1 className='title'>{vals.blog_title}</h1>
             <p className='meta-info'>{vals.blog_date}</p>
-            {img && img.firebaseLink.length !== 0  && <img src={img.firebaseLink} width="100%" alt="blog_img" />}
+            <Row gutter={[50,50]}>
+              <Col xs={24} sm={24} md={13}>
+                {img && img.firebaseLink.length !== 0  && <img src={img.firebaseLink} width="100%" alt="blog_img" />}
+                {images.length > 0 &&
+                // <Carousel className='preview-carousel' width="100%">
+                //   {
+                //     images.map((singleImg,i) => {
+                //       return (
+                //         <img src={singleImg.blog_image} key={i} alt={singleImg.blog_image_name}/>
+                //       );
+                //     })
+                //   }
+                // </Carousel>
+                <img src={images[0].blog_image} alt={images[0].blog_image_name} width="100%"/>
+                }
+              </Col>
 
-
-            {images.length > 0 &&
-            // <Carousel className='preview-carousel' width="100%">
-            //   {
-            //     images.map((singleImg,i) => {
-            //       return (
-            //         <img src={singleImg.blog_image} key={i} alt={singleImg.blog_image_name}/>
-            //       );
-            //     })
-            //   }
-            // </Carousel>
-            <img src={images[0].blog_image} alt={images[0].blog_image_name} width="100%"/>
-            }
-
-            <div className='text-regular'>{parse(vals.blog_body)}</div>
+              <Col xs={24} sm={24} md={11}>
+                <div className='text-regular'>{parse(vals.blog_body)}</div>
+                {vals.blog_pdf?.firebaseLink &&
+                    <Button type='button' className='button-publish' style={{height:40, width: 320, marginTop: 40}}> 
+                      <a href={vals.blog_pdf?.firebaseLink} target="_blank">Click here to continue reading...</a>  
+                    </Button>
+                }
+               </Col> 
+            </Row>
           </div>
         )
         }
